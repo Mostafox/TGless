@@ -6,7 +6,7 @@ import { buildProject } from './build.js';
 import { findRoot, loadConfig, type ResolvedConfig } from './config.js';
 import { addPackages, checkAllDeps } from './deps.js';
 import { doctor } from './doctor.js';
-import { GENERATORS, type GeneratorKind, generate } from './generate.js';
+import { GENERATORS, type GeneratorKind, generate, splitList } from './generate.js';
 import { CliError, color, log } from './log.js';
 import { runTgcloud } from './tgcloud.js';
 
@@ -19,8 +19,13 @@ ${color.bold('Usage')}
   tgless deploy [--migrate]        Build, then \`tgcloud push\` (and \`tgcloud migrate\`)
   tgless migrate [args]            Build, then \`tgcloud migrate\` (args are passed through)
   tgless run <module> [json] [...] Build, then \`tgcloud run\` (e.g. tgless run endpoints/getCart '{}')
-  tgless g <kind> <name> [--module <m>]
+  tgless g <kind> <name>[,<name>…] [--module <m>]
                                    Generate: ${GENERATORS.join(', ')}
+  tgless g module <name> [pieces]  Create (or extend) a whole module in one command:
+      --commands start,help        --callbacks add/:id,refresh   --hears thanks
+      --entity "product:title:text,price:real=0,sku:text!,status:enum(draft|live)=draft,note:text?"
+      --services cart              --endpoints getCart           --scenes checkout
+      --imports users              (field mods: ? optional, ! unique, # index, =default)
   tgless add <pkg...> [--dev]      npm install + check the package can be bundled for tgcloud
   tgless deps                      Check all dependencies can be bundled
   tgless commands                  List bot commands that have a description
@@ -104,6 +109,16 @@ export async function main(argv: string[]) {
       dev: { type: 'boolean', short: 'D' },
       help: { type: 'boolean', short: 'h' },
       version: { type: 'boolean', short: 'v' },
+      // `tgless g module` pieces (repeatable; comma-separated)
+      commands: { type: 'string', multiple: true },
+      callbacks: { type: 'string', multiple: true },
+      hears: { type: 'string', multiple: true },
+      entity: { type: 'string', multiple: true },
+      services: { type: 'string', multiple: true },
+      endpoints: { type: 'string', multiple: true },
+      scenes: { type: 'string', multiple: true },
+      imports: { type: 'string', multiple: true },
+      fields: { type: 'string' },
     },
   });
   const [cmd, ...rest] = positionals;
@@ -156,7 +171,24 @@ export async function main(argv: string[]) {
           throw new CliError(`Unknown generator "${kind ?? ''}". One of: ${GENERATORS.join(', ')}`);
         }
         const cfg = await config(root);
-        generate(kind as GeneratorKind, name, { module: values.module as string | undefined, root: cfg.root, entry: cfg.entry });
+        const list = (k: string) => splitList(values[k] as string[] | undefined);
+        generate(kind as GeneratorKind, name, {
+          module: values.module as string | undefined,
+          root: cfg.root,
+          entry: cfg.entry,
+          fields: values.fields as string | undefined,
+          spec: {
+            commands: list('commands'),
+            callbacks: list('callbacks'),
+            hears: list('hears'),
+            // entity specs contain commas, so several entities are separated by ';' or repeated flags
+            entities: splitList(values.entity as string[] | undefined, /;/),
+            services: list('services'),
+            endpoints: list('endpoints'),
+            scenes: list('scenes'),
+            imports: list('imports'),
+          },
+        });
         return;
       }
       case 'add':

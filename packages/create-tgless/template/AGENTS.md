@@ -16,6 +16,8 @@ running on **Telegram Serverless (tgcloud)**: code runs in a V8 isolate next to 
 ## Golden rules
 
 1. Code goes in `src/modules/<feature>/…`. Register every new route/provider/entity in its module (`*.module.ts`).
+   **Scaffold with `npx tgless g module …` (see below) instead of writing files and registration by hand**. It saves tokens and
+   can't forget a registration. Then edit only the handler bodies and business logic.
 2. Use `ctx.*` helpers and entities. Never import `sdk` directly unless you need something tgless doesn't wrap.
 3. **Schema changes need a migration**: after changing an `entity()`, run `npm run deploy` and then `npm run migrate`.
    Never delete a column/table to drop it. Mark it `.deprecated('reason')` instead (see Database).
@@ -32,11 +34,28 @@ running on **Telegram Serverless (tgcloud)**: code runs in a V8 isolate next to 
 | `npm run deploy` (`tgless deploy`) | Build + `tgcloud push` (deploys code, **not** DB changes) |
 | `npm run migrate` (`tgless migrate`) | Build + `tgcloud migrate` (applies schema changes; interactive) |
 | `npm test` | Run tests locally with the in-memory platform (no network) |
-| `npx tgless g <kind> <name> [--module m]` | Generate `module`, `command`, `callback`, `hears`, `entity`, `service`, `endpoint`, `scene` and register it |
+| `npx tgless g module <name> [pieces]` | Create or extend a whole module in **one command** (see *Scaffolding*) |
+| `npx tgless g <kind> <a,b,c> [--module m]` | Generate `command`, `callback`, `hears`, `entity`, `service`, `endpoint`, `scene` and register them |
 | `npx tgless add <pkg>` | `npm install` + check the package can run on tgcloud |
 | `npx tgless deps` / `npx tgless doctor` | Check dependencies / the whole setup |
 | `npx tgless run endpoints/<name> '{}' --ctx '{ initData: { user: { id: 1 } } }'` | Build + execute one module on the platform |
 | `npx tgcloud login` | Link this folder to a bot (once; needs a TTY) |
+
+## Scaffolding (do this first)
+
+One command writes every file of a feature and registers it in the module and in `src/main.ts`:
+
+```bash
+npx tgless g module shop   --imports users   --commands shop,cart   --callbacks add/:id,remove/:id,refresh   --entity "product:title:text,price:real=0,sku:text!,status:enum(draft|live)=draft,note:text?"   --entity "order:userId:int#,total:real,items:json"   --services cart --endpoints getCart,addItem --scenes checkout --hears thanks
+```
+
+- Run it again on an existing module to **add** pieces: `npx tgless g module shop --commands help`.
+- Single kinds take lists too: `npx tgless g command about,faq --module shop`, `npx tgless g entity coupon --fields "code:text!,percent:int"`.
+- Callbacks: `name/:param/:param` → pattern `<module>:name/:param`, typed `ctx.params`, and `name.data({...})` for buttons.
+- Entity fields: `name:type` + modifiers `?` optional, `!` unique, `#` index, `=default` (last).
+  Types: `text int real numeric bool json date datems blob enum(a|b)`. `id` and `createdAt`/`updatedAt` are added automatically.
+  Defaults: numbers, `true`/`false`, plain text, JSON for `json`, `now` for dates.
+- It refuses to overwrite existing files. Generated handlers are placeholders: replace their bodies with the real logic.
 
 ## Project layout
 
