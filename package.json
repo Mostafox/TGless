@@ -1,0 +1,19 @@
+{
+  "name": "tgless-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w tgless -w create-tgless",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/tgless --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.0"
+  }
+}
