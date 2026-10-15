@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createTestBot, type TestBot } from 'tgless/testing';
+import { createTestBot, type TestBot } from 'tglessjs/testing';
 import app from '../src/main';
 import { SHOP_CONFIG, shopConfig } from '../src/config';
 import { Products } from '../src/modules/catalog/entities/product.entity';

@@ -1,4 +1,4 @@
-import { createApp } from 'tgless';
+import { createApp } from 'tglessjs';
 import { CoreModule } from './modules/core/core.module';
 
 export default createApp({

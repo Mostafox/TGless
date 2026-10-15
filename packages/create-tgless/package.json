@@ -3,15 +3,31 @@
   "version": "0.1.0",
   "description": "Scaffold a Telegram Serverless (tgcloud) bot with tgless: npm create tgless@latest my-bot",
   "license": "MIT",
+  "author": "Mostafox",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mostafox/TGless.git",
+    "directory": "packages/create-tgless"
+  },
+  "homepage": "https://github.com/Mostafox/TGless#readme",
+  "bugs": {
+    "url": "https://github.com/Mostafox/TGless/issues"
+  },
   "type": "module",
   "bin": {
     "create-tgless": "./bin/create-tgless.js"
   },
-  "files": ["bin", "template"],
+  "files": [
+    "bin",
+    "template"
+  ],
   "scripts": {
     "build": "node -e \"require('fs').copyFileSync('template/AGENTS.md', '../tgless/AGENTS.md')\""
   },
   "engines": {
     "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

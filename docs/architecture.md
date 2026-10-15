@@ -66,7 +66,7 @@ attaches each one to its platform table. Repository methods translate `where` ob
 
 ## Testing
 
-`tgless/testing` builds the same `Platform` the generated code builds, but from:
+`tglessjs/testing` builds the same `Platform` the generated code builds, but from:
 
 - a recording Bot API proxy (`MockApi`) and a fetch mock;
 - `better-sqlite3` in memory, with drizzle-orm standing in for `sdk/db` (tgcloud's query builder is Drizzle-like), and

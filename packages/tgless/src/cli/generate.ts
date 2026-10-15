@@ -118,28 +118,178 @@ function pickModule(ctx: Ctx, requested?: string): string {
   throw new CliError(`Which module? Pass --module <name> (one of: ${modules.join(', ')}).`);
 }
 
+// ───────────────────────────── entity fields ─────────────────────────────
+
+const FIELD_TYPES: Record<string, string> = {
+  text: 'c.text()',
+  string: 'c.text()',
+  int: 'c.int()',
+  integer: 'c.int()',
+  real: 'c.real()',
+  float: 'c.real()',
+  number: 'c.real()',
+  numeric: 'c.numeric()',
+  bool: 'c.bool()',
+  boolean: 'c.bool()',
+  json: 'c.json()',
+  date: 'c.date()',
+  datems: 'c.dateMs()',
+  blob: 'c.blob()',
+  enum: 'c.enum',
+};
+
+/**
+ * Parse one field: `name:type[(a|b)][?!#][=default]`.
+ * `?` optional, `!` unique, `#` index, `=x` default. `enum(a|b)` for enums.
+ */
+export function fieldToCode(spec: string): { key: string; code: string } {
+  const m = /^([A-Za-z_]\w*):([A-Za-z]+)(?:\(([^)]*)\))?([?!#]*)(?:=(.*))?$/.exec(spec.trim());
+  if (!m) {
+    throw new CliError(
+      `Bad field "${spec}". Use name:type[?!#][=default], e.g. price:real=0, email:text!?, status:enum(new|paid)=new`,
+    );
+  }
+  const [, key, rawType, args, mods, def] = m;
+  const type = rawType.toLowerCase();
+  const base = FIELD_TYPES[type];
+  if (!base) throw new CliError(`Unknown field type "${rawType}" in "${spec}". One of: ${Object.keys(FIELD_TYPES).join(', ')}`);
+  let code = base;
+  if (type === 'enum') {
+    const values = (args ?? '')
+      .split('|')
+      .map((v) => v.trim())
+      .filter(Boolean);
+    if (!values.length) throw new CliError(`enum needs values: ${key}:enum(a|b)`);
+    code = `c.enum([${values.map((v) => `'${v}'`).join(', ')}])`;
+  }
+  if (mods.includes('!')) code += '.unique()';
+  if (mods.includes('#')) code += '.index()';
+  if (mods.includes('?')) code += '.optional()';
+  if (def !== undefined) code += defaultCode(type, def, spec);
+  return { key, code };
+}
+
+function defaultCode(type: string, raw: string, spec: string): string {
+  const v = raw.trim();
+  switch (type) {
+    case 'text':
+    case 'string':
+    case 'enum':
+      return `.default(${/^(['"]).*\1$/.test(v) ? v : `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`})`;
+    case 'bool':
+    case 'boolean':
+      if (v !== 'true' && v !== 'false') throw new CliError(`Default for "${spec}" must be true or false.`);
+      return `.default(${v})`;
+    case 'date':
+    case 'datems':
+      if (v !== 'now') throw new CliError(`Date default for "${spec}" can only be "now".`);
+      return `.defaultSql('(unixepoch())')`;
+    case 'json':
+      return `.default(${v})`;
+    default:
+      if (v === '' || Number.isNaN(Number(v))) throw new CliError(`Default for "${spec}" must be a number.`);
+      return `.default(${v})`;
+  }
+}
+
+/** `product:title:text,price:real` → `{ name: 'product', fields: ['title:text', 'price:real'] }` */
+export function parseEntitySpec(spec: string): { name: string; fields: string[] } {
+  const i = spec.indexOf(':');
+  if (i < 0) return { name: spec.trim(), fields: [] };
+  return {
+    name: spec.slice(0, i).trim(),
+    fields: spec
+      .slice(i + 1)
+      .split(',')
+      .map((f) => f.trim())
+      .filter(Boolean),
+  };
+}
+
+// ───────────────────────────── generators ─────────────────────────────
+
+/** Pieces to add to a module in one go (`tgless g module shop --commands a,b --entity …`). */
+export interface ModuleSpec {
+  commands?: string[];
+  /** `name` or `name/:param/:param`. */
+  callbacks?: string[];
+  hears?: string[];
+  /** `name:field:type,field:type` each. */
+  entities?: string[];
+  services?: string[];
+  endpoints?: string[];
+  scenes?: string[];
+  /** Other modules (by name) to import. */
+  imports?: string[];
+}
+
 export interface GenerateOptions {
   module?: string;
   root: string;
   entry: string;
+  /** Extra pieces for `g module`. */
+  spec?: ModuleSpec;
+  /** Fields for `g entity` (`title:text,price:real`). */
+  fields?: string;
+}
+
+type PieceKind = Exclude<GeneratorKind, 'module'>;
+
+/** Split repeatable `a,b c` list flags into items. */
+export function splitList(values: string[] | undefined, sep: RegExp = /[,\s]+/): string[] {
+  return (values ?? [])
+    .flatMap((v) => v.split(sep))
+    .map((v) => v.trim())
+    .filter(Boolean);
 }
 
 export function generate(kind: GeneratorKind, rawName: string, opts: GenerateOptions) {
-  if (!rawName) throw new CliError(`Usage: tgless g ${kind} <name>${kind === 'module' ? '' : ' [--module <module>]'}`);
+  if (!rawName) {
+    throw new CliError(
+      `Usage: tgless g ${kind} <name>${kind === 'module' ? ' [--commands a,b --callbacks x/:id --entity "item:title:text" …]' : ' [--module <module>]'}`,
+    );
+  }
   const entryPath = path.resolve(opts.root, opts.entry);
   const ctx: Ctx = { root: opts.root, srcDir: path.dirname(entryPath), created: [], updated: [] };
-  const name = rawName;
 
   if (kind === 'module') {
+    const name = kebab(rawName);
+    const spec = opts.spec ?? {};
     const file = moduleFile(ctx, name);
-    const exportName = `${pascal(name)}Module`;
-    writeNew(
-      ctx,
-      file,
-      `import { defineModule } from 'tgless';
+    const exists = fs.existsSync(file);
+    const hasPieces = Object.values(spec).some((v) => v?.length);
+    if (exists && !hasPieces) throw new CliError(`${path.relative(ctx.root, file)} already exists. Pass pieces (--commands, --entity, …) to add to it.`);
+    if (!exists) createModule(ctx, name, entryPath);
+    for (const imp of spec.imports ?? []) addModuleImport(ctx, name, imp);
+    const pieces: [PieceKind, string[]][] = [
+      ['entity', spec.entities ?? []],
+      ['service', spec.services ?? []],
+      ['command', spec.commands ?? []],
+      ['callback', spec.callbacks ?? []],
+      ['hears', spec.hears ?? []],
+      ['endpoint', spec.endpoints ?? []],
+      ['scene', spec.scenes ?? []],
+    ];
+    for (const [k, items] of pieces) for (const item of items) generatePiece(ctx, k, item, name);
+    return report(ctx);
+  }
+
+  const mod = pickModule(ctx, opts.module);
+  // `g entity product --fields a:text` or `g entity "product:a:text"`; other kinds accept `a,b,c`.
+  const items = kind === 'entity' ? [opts.fields ? `${rawName}:${opts.fields}` : rawName] : splitList([rawName]);
+  for (const item of items) generatePiece(ctx, kind, item, mod);
+  report(ctx);
+}
+
+function createModule(ctx: Ctx, name: string, entryPath: string) {
+  const exportName = `${pascal(name)}Module`;
+  writeNew(
+    ctx,
+    moduleFile(ctx, name),
+    `import { defineModule } from 'tglessjs';
 
 export const ${exportName} = defineModule({
-  name: '${kebab(name)}',
+  name: '${name}',
   imports: [],
   providers: [],
   entities: [],
@@ -148,22 +298,26 @@ export const ${exportName} = defineModule({
   endpoints: {},
 });
 `,
+  );
+  if (fs.existsSync(entryPath)) {
+    update(ctx, entryPath, (s) =>
+      register(addImport(s, `import { ${exportName} } from './modules/${name}/${name}.module';`), 'createApp', 'modules', exportName, '['),
     );
-    if (fs.existsSync(entryPath)) {
-      update(ctx, entryPath, (s) =>
-        register(
-          addImport(s, `import { ${exportName} } from './modules/${kebab(name)}/${kebab(name)}.module';`),
-          'createApp',
-          'modules',
-          exportName,
-          '[',
-        ),
-      );
-    }
-    return report(ctx);
   }
+}
 
-  const mod = pickModule(ctx, opts.module);
+function addModuleImport(ctx: Ctx, mod: string, other: string) {
+  const target = kebab(other);
+  if (!fs.existsSync(moduleFile(ctx, target))) {
+    throw new CliError(`Cannot import module "${other}": src/modules/${target}/${target}.module.ts not found.`);
+  }
+  const exportName = `${pascal(target)}Module`;
+  update(ctx, moduleFile(ctx, mod), (s) =>
+    register(addImport(s, `import { ${exportName} } from '../${target}/${target}.module';`), 'defineModule', 'imports', exportName, '['),
+  );
+}
+
+function generatePiece(ctx: Ctx, kind: PieceKind, rawName: string, mod: string) {
   const modDir = path.join(ctx.srcDir, 'modules', mod);
   const modFile = path.join(modDir, `${mod}.module.ts`);
   const reg = (prop: string, exportName: string, rel: string, open: '[' | '{' = '[') =>
@@ -171,12 +325,13 @@ export const ${exportName} = defineModule({
 
   switch (kind) {
     case 'command': {
+      const name = rawName.replace(/^\//, '');
       const cmd = snake(name);
       const exportName = `${camel(name)}Command`;
       writeNew(
         ctx,
         path.join(modDir, 'commands', `${kebab(name)}.command.ts`),
-        `import { command } from 'tgless';
+        `import { command } from 'tglessjs';
 
 export const ${exportName} = command('${cmd}', { description: '${pascal(name)}' }, async (ctx) => {
   await ctx.reply('/${cmd} works!');
@@ -187,48 +342,62 @@ export const ${exportName} = command('${cmd}', { description: '${pascal(name)}' 
       break;
     }
     case 'callback': {
-      const exportName = `${camel(name)}Callback`;
+      // `add/:id` → pattern `<module>:add/:id` with params { id }; `refresh` → no params.
+      const [base, ...rest] = rawName.split('/');
+      const params = rest.map((p) => p.replace(/^:/, '')).filter(Boolean);
+      const exportName = `${camel(base)}Callback`;
+      const pattern = [`${mod}:${kebab(base)}`, ...params.map((p) => `:${p}`)].join('/');
+      const example = params.length ? `{ ${params.map((p) => `${p}: 1`).join(', ')} }` : '';
+      const body = params.length
+        ? `await ctx.answer(\`${params.map((p) => `${p}=\${ctx.params.${p}}`).join(' ')}\`);`
+        : `await ctx.answer('Done');`;
       writeNew(
         ctx,
-        path.join(modDir, 'callbacks', `${kebab(name)}.callback.ts`),
-        `import { callback } from 'tgless';
+        path.join(modDir, 'callbacks', `${kebab(base)}.callback.ts`),
+        `import { callback } from 'tglessjs';
 
-// Build button data with: inline().text('Label', ${exportName}.data({ id: 1 }))
-export const ${exportName} = callback('${mod}:${kebab(name)}/:id', async (ctx) => {
-  await ctx.answer(\`id = \${ctx.params.id}\`);
+// Button: inline().text('Label', ${exportName}.data(${example}))
+export const ${exportName} = callback('${pattern}', async (ctx) => {
+  ${body}
 });
 `,
       );
-      reg('callbacks', exportName, `./callbacks/${kebab(name)}.callback`);
+      reg('callbacks', exportName, `./callbacks/${kebab(base)}.callback`);
       break;
     }
     case 'hears': {
-      const exportName = `${camel(name)}Hears`;
+      const exportName = `${camel(rawName)}Hears`;
       writeNew(
         ctx,
-        path.join(modDir, 'hears', `${kebab(name)}.hears.ts`),
-        `import { hears } from 'tgless';
+        path.join(modDir, 'hears', `${kebab(rawName)}.hears.ts`),
+        `import { hears } from 'tglessjs';
 
-export const ${exportName} = hears(/^${words(name).join(' ')}$/i, async (ctx) => {
+export const ${exportName} = hears(/^${words(rawName).join(' ')}$/i, async (ctx) => {
   await ctx.reply('Heard you!');
 });
 `,
       );
-      reg('routes', exportName, `./hears/${kebab(name)}.hears`);
+      reg('routes', exportName, `./hears/${kebab(rawName)}.hears`);
       break;
     }
     case 'entity': {
+      const { name, fields } = parseEntitySpec(rawName);
       const exportName = pascal(plural(camel(name)));
       const table = snake(plural(camel(name)));
+      const parsed = (fields.length ? fields : ['name:text']).map(fieldToCode);
+      const keys = new Set(parsed.map((f) => f.key));
+      const lines = [
+        ...(keys.has('id') ? [] : ['  id: c.id(),']),
+        ...parsed.map((f) => `  ${f.key}: ${f.code},`),
+        ...(keys.has('createdAt') || keys.has('updatedAt') ? [] : ['  ...c.timestamps(),']),
+      ];
       writeNew(
         ctx,
         path.join(modDir, 'entities', `${kebab(name)}.entity.ts`),
-        `import { c, entity, type Infer } from 'tgless/db';
+        `import { c, entity, type Infer } from 'tglessjs/db';
 
 export const ${exportName} = entity('${table}', {
-  id: c.id(),
-  name: c.text(),
-  ...c.timestamps(),
+${lines.join('\n')}
 });
 
 export type ${pascal(name)} = Infer<typeof ${exportName}>;
@@ -238,10 +407,10 @@ export type ${pascal(name)} = Infer<typeof ${exportName}>;
       break;
     }
     case 'service': {
-      const exportName = `${pascal(name)}Service`;
+      const exportName = `${pascal(rawName)}Service`;
       writeNew(
         ctx,
-        path.join(modDir, 'services', `${kebab(name)}.service.ts`),
+        path.join(modDir, 'services', `${kebab(rawName)}.service.ts`),
         `// Inject dependencies with field initializers: \`private other = inject(OtherService);\`
 export class ${exportName} {
   hello(name: string) {
@@ -250,15 +419,15 @@ export class ${exportName} {
 }
 `,
       );
-      reg('providers', exportName, `./services/${kebab(name)}.service`);
+      reg('providers', exportName, `./services/${kebab(rawName)}.service`);
       break;
     }
     case 'endpoint': {
-      const exportName = camel(name);
+      const exportName = camel(rawName);
       writeNew(
         ctx,
-        path.join(modDir, 'endpoints', `${kebab(name)}.endpoint.ts`),
-        `import { endpoint } from 'tgless';
+        path.join(modDir, 'endpoints', `${kebab(rawName)}.endpoint.ts`),
+        `import { endpoint } from 'tglessjs';
 
 // Mini App: Telegram.WebApp.Serverless.call('${exportName}', input, (err, result) => ...)
 export const ${exportName} = endpoint(async (ctx) => {
@@ -266,22 +435,22 @@ export const ${exportName} = endpoint(async (ctx) => {
 });
 `,
       );
-      reg('endpoints', exportName, `./endpoints/${kebab(name)}.endpoint`, '{');
+      reg('endpoints', exportName, `./endpoints/${kebab(rawName)}.endpoint`, '{');
       break;
     }
     case 'scene': {
-      const exportName = `${camel(name)}Scene`;
+      const exportName = `${camel(rawName)}Scene`;
       writeNew(
         ctx,
-        path.join(modDir, 'scenes', `${kebab(name)}.scene.ts`),
-        `import { scene } from 'tgless';
+        path.join(modDir, 'scenes', `${kebab(rawName)}.scene.ts`),
+        `import { scene } from 'tglessjs';
 
 interface State {
   answer?: string;
 }
 
-// Start with: await ctx.scene.enter('${kebab(name)}')
-export const ${exportName} = scene<State>('${kebab(name)}', [
+// Start with: await ctx.scene.enter('${kebab(rawName)}')
+export const ${exportName} = scene<State>('${kebab(rawName)}', [
   async (ctx) => {
     await ctx.reply('Question? (send /cancel to stop)');
     ctx.scene.next();
@@ -295,11 +464,10 @@ export const ${exportName} = scene<State>('${kebab(name)}', [
 ]);
 `,
       );
-      reg('scenes', exportName, `./scenes/${kebab(name)}.scene`);
+      reg('scenes', exportName, `./scenes/${kebab(rawName)}.scene`);
       break;
     }
   }
-  report(ctx);
 }
 
 function report(ctx: Ctx) {

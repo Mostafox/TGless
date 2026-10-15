@@ -1,4 +1,4 @@
-import { command, defineModule, endpoint } from 'tgless';
+import { command, defineModule, endpoint } from 'tglessjs';
 import { renderCatalog, showCatalog, showProduct } from './callbacks/catalog.callbacks';
 import { Products } from './entities/product.entity';
 import { CatalogService } from './services/catalog.service';

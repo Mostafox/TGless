@@ -1,5 +1,5 @@
-import { callback, command, defineModule, html, inline } from 'tgless';
-import { c, entity } from 'tgless/db';
+import { callback, command, defineModule, html, inline } from 'tglessjs';
+import { c, entity } from 'tglessjs/db';
 
 /** One row per user who pressed the button. */
 export const Clicks = entity('clicks', {

@@ -7,8 +7,8 @@ npm packages bundled for you, and a local test harness. You need very little cod
 
 ```ts
 // src/main.ts: a complete bot
-import { createApp, inline, callback } from 'tgless';
-import { c, entity } from 'tgless/db';
+import { createApp, inline, callback } from 'tglessjs';
+import { c, entity } from 'tglessjs/db';
 
 const Clicks = entity('clicks', { id: c.id(), userId: c.int().unique(), count: c.int().default(0) });
 

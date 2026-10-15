@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { command, html, inline } from 'tgless';
+import { command, html, inline } from 'tglessjs';
 import { openCart } from '../../cart/callbacks/cart.callbacks';
 import { showCatalog } from '../../catalog/callbacks/catalog.callbacks';
 import type { User } from '../entities/user.entity';

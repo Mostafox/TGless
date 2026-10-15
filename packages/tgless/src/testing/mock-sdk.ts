@@ -11,7 +11,7 @@ function load<T>(id: string): T {
     return require(id) as T;
   } catch (e) {
     throw new Error(
-      `tgless/testing needs "${id}". Install the test dependencies:\n  npm i -D better-sqlite3 drizzle-orm\n(${(e as Error).message})`,
+      `tglessjs/testing needs "${id}". Install the test dependencies:\n  npm i -D better-sqlite3 drizzle-orm\n(${(e as Error).message})`,
     );
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTestBot } from 'tgless/testing';
+import { createTestBot } from 'tglessjs/testing';
 import app from '../src/main';
 
 describe('bot', () => {

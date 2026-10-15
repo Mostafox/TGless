@@ -1,4 +1,4 @@
-import type { Telegram } from 'tgless';
+import type { Telegram } from 'tglessjs';
 import { Users, type User } from '../entities/user.entity';
 
 export class UsersService {

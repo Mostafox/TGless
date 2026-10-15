@@ -1,4 +1,4 @@
-import { defineModule } from 'tgless';
+import { defineModule } from 'tglessjs';
 import { startCommand } from './commands/start.command';
 import { Users } from './entities/user.entity';
 import { UsersService } from './services/users.service';

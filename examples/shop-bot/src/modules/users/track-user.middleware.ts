@@ -1,4 +1,4 @@
-import type { Middleware } from 'tgless';
+import type { Middleware } from 'tglessjs';
 import { UsersService } from './services/users.service';
 
 /** Keeps the `users` table in sync and exposes the row as `ctx.state.user`. */

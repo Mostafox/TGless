@@ -1,4 +1,4 @@
-import { InjectionToken } from 'tgless';
+import { InjectionToken } from 'tglessjs';
 
 export interface ShopConfig {
   adminIds: number[];
