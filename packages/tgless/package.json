@@ -1,0 +1,79 @@
+{
+  "name": "tgless",
+  "version": "0.1.0",
+  "description": "A TypeScript framework for building large Telegram bots on Telegram Serverless (tgcloud).",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "telegram",
+    "bot",
+    "serverless",
+    "tgcloud",
+    "framework",
+    "orm"
+  ],
+  "bin": {
+    "tgless": "./bin/tgless.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./db": {
+      "types": "./dist/db/index.d.ts",
+      "default": "./dist/db/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./sdk": {
+      "types": "./types/sdk.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "types",
+    "shims",
+    "AGENTS.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "@grammyjs/types": "^3.28.0",
+    "buffer": "^6.0.3",
+    "esbuild": "^0.25.0",
+    "events": "^3.3.0"
+  },
+  "peerDependencies": {
+    "better-sqlite3": ">=11",
+    "drizzle-orm": ">=0.36"
+  },
+  "peerDependenciesMeta": {
+    "better-sqlite3": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "better-sqlite3": "^12.0.0",
+    "drizzle-orm": "^0.45.0"
+  }
+}

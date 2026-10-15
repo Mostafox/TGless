@@ -1,0 +1,17 @@
+{
+  "name": "create-tgless",
+  "version": "0.1.0",
+  "description": "Scaffold a Telegram Serverless (tgcloud) bot with tgless: npm create tgless@latest my-bot",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-tgless": "./bin/create-tgless.js"
+  },
+  "files": ["bin", "template"],
+  "scripts": {
+    "build": "node -e \"require('fs').copyFileSync('template/AGENTS.md', '../tgless/AGENTS.md')\""
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}
