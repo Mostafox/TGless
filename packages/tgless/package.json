@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "description": "A TypeScript framework for building large Telegram bots on Telegram Serverless (tgcloud).",
   "license": "MIT",
+  "author": "Mostafox",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mostafox/TGless.git",
+    "directory": "packages/tgless"
+  },
+  "homepage": "https://github.com/Mostafox/TGless#readme",
+  "bugs": {
+    "url": "https://github.com/Mostafox/TGless/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "keywords": [
@@ -48,7 +58,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.build.json --watch"
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "prepublishOnly": "npm run build && node -e \"require('fs').copyFileSync('../create-tgless/template/AGENTS.md', 'AGENTS.md')\""
   },
   "engines": {
     "node": ">=18.18"
@@ -75,5 +86,8 @@
     "@types/better-sqlite3": "^7.6.12",
     "better-sqlite3": "^12.0.0",
     "drizzle-orm": "^0.45.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
