@@ -6,7 +6,7 @@ import { buildProject } from '../cli/build.js';
 import { loadConfig } from '../cli/config.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-// Inside the repo so `tgless` resolves through the workspace node_modules.
+// Inside the repo so `tglessjs` resolves through the workspace node_modules.
 const tmpRoot = path.resolve(here, '../../.tmp-test');
 
 let n = 0;
@@ -28,7 +28,7 @@ const pkg = (name: string, main: string, extra: object = {}) => ({
 
 const app = (imports: string, use: string) => ({
   'package.json': JSON.stringify({ name: 'p', type: 'module' }),
-  'src/main.ts': `import { createApp, command } from 'tgless';
+  'src/main.ts': `import { createApp, command } from 'tglessjs';
 ${imports}
 export default createApp({ commands: { start: (ctx) => ctx.reply(String(${use})) } });
 `,

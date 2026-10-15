@@ -63,7 +63,7 @@ Imports inside `src/` are normal TypeScript imports (no `.js` extension needed).
 
 ```ts
 // src/main.ts
-import { createApp } from 'tgless';
+import { createApp } from 'tglessjs';
 export default createApp({
   modules: [UsersModule, ShopModule],
   parseMode: 'HTML',               // default parse_mode for replies/edits/captions
@@ -76,7 +76,7 @@ export default createApp({
 
 ```ts
 // src/modules/shop/shop.module.ts
-import { defineModule } from 'tgless';
+import { defineModule } from 'tglessjs';
 export const ShopModule = defineModule({
   name: 'shop',
   imports: [UsersModule],          // can inject what UsersModule exports
@@ -101,7 +101,7 @@ A minimal bot can skip modules: `createApp({ commands: { start: (ctx) => ctx.rep
 Routes are tried in this order: active **scene step**, then **commands**, **callbacks**, **inline queries**, **hears**, and **on** filters. The first match wins.
 
 ```ts
-import { command, callback, hears, on, inlineQuery } from 'tgless';
+import { command, callback, hears, on, inlineQuery } from 'tglessjs';
 
 export const start = command('start', { description: 'Main menu' }, async (ctx) => {
   ctx.args;        // "/start ref123" → "ref123" (deep-link payload)
@@ -155,7 +155,7 @@ Text helpers: `` html`<b>${userInput}</b>` `` escapes interpolations (use with `
 ### Keyboards
 
 ```ts
-import { inline, keyboard, removeKeyboard } from 'tgless';
+import { inline, keyboard, removeKeyboard } from 'tglessjs';
 inline().text('Buy', buy.data({ id: 1 })).url('Site', 'https://…').row().webApp('Open app', 'https://app<id>.tgcloud.ai/');
 inline().grid(items, 2, (it) => ({ text: it.title, callback_data: show.data({ id: it.id }) }));
 keyboard().text('Menu').requestContact('Share phone').oneTime().placeholder('Choose…');
@@ -167,7 +167,7 @@ await ctx.reply('…', { keyboard: removeKeyboard() });
 Providers are singletons per app. Inject them with `inject()` in **field initializers** (no decorators or reflect-metadata):
 
 ```ts
-import { inject, InjectionToken } from 'tgless';
+import { inject, InjectionToken } from 'tglessjs';
 export const CONFIG = new InjectionToken<{ currency: string }>('config');
 
 export class CartService {
@@ -187,7 +187,7 @@ In tests, replace a provider with `bot.override(Token, { provide: Token, useValu
 Entities are a typed layer over tgcloud's SQLite query builder. `tgless build` turns them into `tgcloud/schema.js`.
 
 ```ts
-import { c, entity, type Infer } from 'tgless/db';
+import { c, entity, type Infer } from 'tglessjs/db';
 
 export const Users = entity('users', {
   id: c.id(),                                // INTEGER PRIMARY KEY AUTOINCREMENT
@@ -217,7 +217,7 @@ Keys are camelCase in TS and become snake_case in SQL (`tgId` → `tg_id`).
 ### Queries
 
 ```ts
-import { gt, gte, lt, like, contains, inArray, between, isNull, ne } from 'tgless/db';
+import { gt, gte, lt, like, contains, inArray, between, isNull, ne } from 'tglessjs/db';
 
 await Users.find({ tgId: 42 });                         // first match or null
 await Users.findById(1);
@@ -263,7 +263,7 @@ const row = await Orders.select({ revenue: ops.sum(Orders.table.total) }).where(
 ## Sessions and scenes
 
 ```ts
-declare module 'tgless' {
+declare module 'tglessjs' {
   interface SessionData { lang?: string; cart?: number[] }   // typed ctx.session
 }
 createApp({ session: { initial: () => ({ cart: [] }) } });
@@ -288,7 +288,7 @@ Everything else goes to the current step.
 ## Mini App endpoints
 
 ```ts
-import { endpoint, fail } from 'tgless';
+import { endpoint, fail } from 'tglessjs';
 export const getProfile = endpoint(async (ctx) => {
   const user = await Users.find({ tgId: ctx.user.id });  // ctx.user = verified initData.user
   if (!user) throw fail('Not registered', { code: 'NOT_FOUND' }); // → 400 ENDPOINT_ERROR for the client
@@ -306,7 +306,7 @@ The Mini App front-end itself is configured in `tgcloud.jsonc` (`"static": { "so
 ## Guards and middlewares
 
 ```ts
-import { guards, logger, ForbiddenError } from 'tgless';
+import { guards, logger, ForbiddenError } from 'tglessjs';
 guards.admins([123], '⛔ Admins only')   // throws ForbiddenError → message sent to the user
 guards.users(ids) · guards.privateChat() · guards.groups() · guards.chatType('channel')
 guards.when((ctx) => ctx.inject(Config).adminIds.includes(ctx.from!.id), 'No access')
@@ -342,7 +342,7 @@ Never commit secrets: read them from the shell environment when building.
 ## Testing
 
 ```ts
-import { createTestBot } from 'tgless/testing';
+import { createTestBot } from 'tglessjs/testing';
 import app from '../src/main';
 
 const bot = createTestBot(app, { user: { id: 1 } });       // fresh in-memory SQLite per bot

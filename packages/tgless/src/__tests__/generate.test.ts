@@ -28,7 +28,7 @@ describe('tgless g', () => {
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'gen', type: 'module' }));
     fs.writeFileSync(
       path.join(root, 'src/main.ts'),
-      `import { createApp } from 'tgless';\n\nexport default createApp({\n  modules: [],\n});\n`,
+      `import { createApp } from 'tglessjs';\n\nexport default createApp({\n  modules: [],\n});\n`,
     );
     const opts = { root, entry: 'src/main.ts' };
     generate('module', 'blog', opts);

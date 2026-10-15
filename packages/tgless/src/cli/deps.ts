@@ -16,7 +16,7 @@ export function packageName(spec: string): string {
 }
 
 /** Packages the framework itself provides; never bundled as user deps. */
-const SKIP = new Set(['tgless', '@tgcloud/cli', 'typescript', 'vitest', 'better-sqlite3', 'drizzle-orm']);
+const SKIP = new Set(['tglessjs', 'tgless', '@tgcloud/cli', 'typescript', 'vitest', 'better-sqlite3', 'drizzle-orm']);
 
 export interface DepReport {
   name: string;

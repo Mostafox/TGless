@@ -1,4 +1,4 @@
-import { defineConfig } from 'tgless/config';
+import { defineConfig } from 'tglessjs/config';
 
 // tgcloud has no environment variables at runtime, so values are inlined at build time.
 // Keep real secrets out of git: export ADMIN_IDS=123,456 before `tgless build`.

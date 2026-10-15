@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { register } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { createMockPlatform, entityDdl } from 'tgless/testing';
+import { createMockPlatform, entityDdl } from 'tglessjs/testing';
 
 const [root, scenarioFile] = process.argv.slice(2);
 const scenario = JSON.parse(fs.readFileSync(scenarioFile, 'utf8'));

@@ -20,7 +20,7 @@ import type { App } from './app.js';
  * Session shape. Extend it with declaration merging:
  *
  * ```ts
- * declare module 'tgless' {
+ * declare module 'tglessjs' {
  *   interface SessionData { lang: string; cart: number[] }
  * }
  * ```

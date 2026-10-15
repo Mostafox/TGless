@@ -1,4 +1,4 @@
-import { c, entity, type Infer } from 'tgless/db';
+import { c, entity, type Infer } from 'tglessjs/db';
 
 export const Users = entity('users', {
   id: c.id(),

@@ -1,4 +1,4 @@
-import { c, entity, type Infer } from 'tgless/db';
+import { c, entity, type Infer } from 'tglessjs/db';
 import { Products } from '../../catalog/entities/product.entity';
 
 export const CartItems = entity('cart_items', {

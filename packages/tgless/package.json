@@ -1,5 +1,5 @@
 {
-  "name": "tgless",
+  "name": "tglessjs",
   "version": "0.1.0",
   "description": "A TypeScript framework for building large Telegram bots on Telegram Serverless (tgcloud).",
   "license": "MIT",

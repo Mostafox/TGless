@@ -1,4 +1,4 @@
-import { html, inline, scene } from 'tgless';
+import { html, inline, scene } from 'tglessjs';
 import { CartError, CartService } from '../services/cart.service';
 
 interface CheckoutState {

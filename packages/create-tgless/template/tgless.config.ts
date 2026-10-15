@@ -1,4 +1,4 @@
-import { defineConfig } from 'tgless/config';
+import { defineConfig } from 'tglessjs/config';
 
 // Everything is optional. See AGENTS.md → "Configuration".
 export default defineConfig({

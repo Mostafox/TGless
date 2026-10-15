@@ -1,5 +1,5 @@
-import { inject } from 'tgless';
-import { gt } from 'tgless/db';
+import { inject } from 'tglessjs';
+import { gt } from 'tglessjs/db';
 import { SHOP_CONFIG } from '../../../config';
 import { Products, type Product } from '../entities/product.entity';
 

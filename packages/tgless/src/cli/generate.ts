@@ -136,7 +136,7 @@ export function generate(kind: GeneratorKind, rawName: string, opts: GenerateOpt
     writeNew(
       ctx,
       file,
-      `import { defineModule } from 'tgless';
+      `import { defineModule } from 'tglessjs';
 
 export const ${exportName} = defineModule({
   name: '${kebab(name)}',
@@ -176,7 +176,7 @@ export const ${exportName} = defineModule({
       writeNew(
         ctx,
         path.join(modDir, 'commands', `${kebab(name)}.command.ts`),
-        `import { command } from 'tgless';
+        `import { command } from 'tglessjs';
 
 export const ${exportName} = command('${cmd}', { description: '${pascal(name)}' }, async (ctx) => {
   await ctx.reply('/${cmd} works!');
@@ -191,7 +191,7 @@ export const ${exportName} = command('${cmd}', { description: '${pascal(name)}' 
       writeNew(
         ctx,
         path.join(modDir, 'callbacks', `${kebab(name)}.callback.ts`),
-        `import { callback } from 'tgless';
+        `import { callback } from 'tglessjs';
 
 // Build button data with: inline().text('Label', ${exportName}.data({ id: 1 }))
 export const ${exportName} = callback('${mod}:${kebab(name)}/:id', async (ctx) => {
@@ -207,7 +207,7 @@ export const ${exportName} = callback('${mod}:${kebab(name)}/:id', async (ctx) =
       writeNew(
         ctx,
         path.join(modDir, 'hears', `${kebab(name)}.hears.ts`),
-        `import { hears } from 'tgless';
+        `import { hears } from 'tglessjs';
 
 export const ${exportName} = hears(/^${words(name).join(' ')}$/i, async (ctx) => {
   await ctx.reply('Heard you!');
@@ -223,7 +223,7 @@ export const ${exportName} = hears(/^${words(name).join(' ')}$/i, async (ctx) =>
       writeNew(
         ctx,
         path.join(modDir, 'entities', `${kebab(name)}.entity.ts`),
-        `import { c, entity, type Infer } from 'tgless/db';
+        `import { c, entity, type Infer } from 'tglessjs/db';
 
 export const ${exportName} = entity('${table}', {
   id: c.id(),
@@ -258,7 +258,7 @@ export class ${exportName} {
       writeNew(
         ctx,
         path.join(modDir, 'endpoints', `${kebab(name)}.endpoint.ts`),
-        `import { endpoint } from 'tgless';
+        `import { endpoint } from 'tglessjs';
 
 // Mini App: Telegram.WebApp.Serverless.call('${exportName}', input, (err, result) => ...)
 export const ${exportName} = endpoint(async (ctx) => {
@@ -274,7 +274,7 @@ export const ${exportName} = endpoint(async (ctx) => {
       writeNew(
         ctx,
         path.join(modDir, 'scenes', `${kebab(name)}.scene.ts`),
-        `import { scene } from 'tgless';
+        `import { scene } from 'tglessjs';
 
 interface State {
   answer?: string;

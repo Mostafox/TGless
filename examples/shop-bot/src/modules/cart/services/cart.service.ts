@@ -1,4 +1,4 @@
-import { inject } from 'tgless';
+import { inject } from 'tglessjs';
 import { CatalogService } from '../../catalog/services/catalog.service';
 import { Products } from '../../catalog/entities/product.entity';
 import { CartItems, Orders, type OrderLine } from '../entities/cart.entities';

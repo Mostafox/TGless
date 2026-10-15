@@ -1,11 +1,11 @@
 /**
  * Ambient types for the tgcloud platform modules, for code that imports them
  * directly (`import { InputFile } from 'sdk'`). Add to tsconfig:
- *   "types": ["tgless/sdk"]
+ *   "types": ["tglessjs/sdk"]
  * Prefer the framework APIs (ctx.api, ctx.fetch, entities) — they are typed and testable.
  */
 declare module 'sdk' {
-  import type { BotApi, SdkDatabase, SdkFetch, InputFileLike } from 'tgless';
+  import type { BotApi, SdkDatabase, SdkFetch, InputFileLike } from 'tglessjs';
   export const api: BotApi;
   export const db: SdkDatabase;
   export const fetch: SdkFetch;
@@ -27,7 +27,7 @@ declare module 'sdk' {
 }
 
 declare module 'sdk/db' {
-  import type { SdkDbModule, SdkDatabase } from 'tgless';
+  import type { SdkDbModule, SdkDatabase } from 'tglessjs';
   const db: SdkDatabase & SdkDbModule;
   export default db;
   export const table: SdkDbModule['table'];

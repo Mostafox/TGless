@@ -1,4 +1,4 @@
-import { createApp, defineModule } from 'tgless';
+import { createApp, defineModule } from 'tglessjs';
 import { SHOP_CONFIG, shopConfig } from './config';
 import { AdminModule } from './modules/admin/admin.module';
 import { CartModule } from './modules/cart/cart.module';

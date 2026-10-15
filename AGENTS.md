@@ -30,7 +30,7 @@ cd examples/shop-bot && npx tgless build   # try the CLI on the example
 ```
 
 The build/e2e tests run the CLI from `src/`, but they spawn `dist/cli/manifest-runner.js`, so **run `npm run build` before `npm test`**
-after changing anything under `src/cli` or `src/db/codegen.ts`. The example and template also import `tgless` from `dist/`.
+after changing anything under `src/cli` or `src/db/codegen.ts`. The example and template also import `tglessjs` from `dist/`.
 
 ## Invariants (don't break these)
 

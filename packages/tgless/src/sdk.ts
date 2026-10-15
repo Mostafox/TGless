@@ -3,7 +3,7 @@
  *
  * The runtime never imports `sdk` directly. The generated entry (`tgcloud/lib/app.js`)
  * imports the real modules and hands them to `app.bind()`. Tests hand in the mock
- * from `tgless/testing`. This keeps the framework testable and platform-agnostic.
+ * from `tglessjs/testing`. This keeps the framework testable and platform-agnostic.
  */
 import type { ApiMethods } from '@grammyjs/types';
 

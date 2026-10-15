@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.13",
-    "tgless": "*"
+    "tglessjs": "*"
   },
   "devDependencies": {
     "@tgcloud/cli": "^0.2.0",

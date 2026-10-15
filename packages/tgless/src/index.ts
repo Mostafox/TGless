@@ -58,7 +58,7 @@ export type { Platform, BotApi, SdkModule, SdkDbModule, SdkDatabase, SdkFetch, I
 // Text helpers
 export { html, md } from './runtime/format.js';
 
-// ORM (also available as `tgless/db`)
+// ORM (also available as `tglessjs/db`)
 export { entity, c, type Infer, type InferInsert } from './db/index.js';
 
 // Bot API types

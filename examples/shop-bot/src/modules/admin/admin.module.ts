@@ -1,4 +1,4 @@
-import { command, defineModule, guards, html, scene } from 'tgless';
+import { command, defineModule, guards, html, scene } from 'tglessjs';
 import { SHOP_CONFIG } from '../../config';
 import { CatalogModule } from '../catalog/catalog.module';
 import { CatalogService } from '../catalog/services/catalog.service';

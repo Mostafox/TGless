@@ -1,4 +1,4 @@
-import { callback, html, inline, type Context } from 'tgless';
+import { callback, html, inline, type Context } from 'tglessjs';
 import { addToCart } from '../../cart/callbacks/cart.callbacks';
 import { CatalogService } from '../services/catalog.service';
 
